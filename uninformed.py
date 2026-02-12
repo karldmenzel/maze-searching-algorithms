@@ -1,8 +1,13 @@
+import math
+
 def uninformed_search():
     print('Hello world from the uninformed search algorithm.')
 
 MAZE_WIDTH = 37
 MAZE_HEIGHT = 25
+
+start_position = (24, 35)
+end_position = (0, 2)
 
 # [row][col]
 # [0][0]    [0][1]  [0][2] ... [0, 36]
@@ -30,9 +35,20 @@ def print_maze():
             print(maze[row][col], end='')
         print()
 
+def mark_position(row, col):
+    if maze[row][col] != "O":
+        maze[row][col] = "*"
+    else:
+        print("Oops, you walked into a wall!")
+
+def straight_line_distance(row1, col1, row2, col2):
+    return math.sqrt((row2 - row1) ** 2 + (col2 - col1) ** 2)
+
 if __name__ == '__main__':
     print('Beginning uninformed search.')
     import_maze('maze.txt')
     print_maze()
     uninformed_search()
+    mark_position(start_position[0], start_position[1])
+    print_maze()
     print('Finished uninformed search.')
