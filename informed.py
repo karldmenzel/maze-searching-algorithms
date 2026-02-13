@@ -16,9 +16,54 @@ maze = [[1] * MAZE_WIDTH for _ in range(MAZE_HEIGHT)]
 # ...
 # [24][0]
 
+class Node:
+    def __init__(self, coords, parent, f, g, h):
+        self.coords = coords
+        self.parent = parent
+        self.f = f
+        self.g = g
+        self.h = h
+    def __str__(self):
+        return f"{str(self.coords)}, {str(self.parent)}, {str(self.f)}"
 
-def search(current_node, history):
+open_list = []
+closed_list = []
+
+def search():
+    while len(open_list) > 0:
+        current_node = open_list.pop(0)
+        print(current_node)
+        neighbors = get_neighbors(current_node.coords)
+        for neighbor in neighbors:
+            if neighbor == end_position:
+                print("Found it!")
+                # TODO figure out how to end
+                return
+            else:
+                g = current_node.g + 1
+                h = straight_line_distance(neighbor, end_position)
+                f = g + h
+                neighbor_node = Node(neighbor, current_node, f, g, h)
+                if better_route_open(neighbor_node):
+                    continue
+                if better_route_closed(neighbor_node):
+                    continue
+                open_list.append(neighbor_node)
+        #         TODO sort the open_list
+        closed_list.append(current_node)
     return
+
+def better_route_open(new_node):
+    for old_node in open_list:
+        if old_node.coords == new_node.coords and old_node.f < new_node.f:
+            return True
+    return False
+
+def better_route_closed(new_node):
+    for old_node in closed_list:
+        if old_node.coords == new_node.coords and old_node.f < new_node.f:
+            return True
+    return False
 
 def import_maze(file_name):
     maze_file = open(file_name)
@@ -60,11 +105,9 @@ def get_neighbors(coord):
 
 if __name__ == '__main__':
     import_maze('maze.txt')
-    path = search(start_position, [])
-    if path is None or len(path) == 0:
-        print("No solution found")
-        exit(1)
 
-    for index, pos in enumerate(path):
-        mark_position(pos, '*')
-    print_maze()
+    start_node_h = straight_line_distance(start_position, end_position)
+    start_node = Node(start_position, None, start_node_h, 0, start_node_h) # TODO should f be 0?
+    open_list.append(start_node)
+
+    # search()
