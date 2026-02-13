@@ -1,4 +1,5 @@
 import math
+import time
 
 MAZE_WIDTH = 37
 MAZE_HEIGHT = 25
@@ -7,23 +8,7 @@ WALL = "O"
 start_position = (24, 35)
 end_position = (0, 2)
 
-stack = [start_position]
-
-def uninformed_search():
-    for _ in range(1000):
-        current_position = stack.pop()
-        # print_maze()
-        # print(current_position)
-        # print(stack)
-        mark_position(current_position)
-        if current_position == end_position:
-            print("I found the end!")
-            print_maze()
-            return
-        for coord in get_neighbors(current_position):
-            stack.append(coord)
-
-    print('Hello world from the uninformed search algorithm.')
+maze = [[1] * MAZE_WIDTH for _ in range(MAZE_HEIGHT)]
 
 
 # coordinates: [row][col]
@@ -33,10 +18,25 @@ def uninformed_search():
 # ...
 # [24][0]
 
-maze = [[1] * MAZE_WIDTH for _ in range(MAZE_HEIGHT)]
+
+def search(current_node, history):
+    if current_node in history:
+        return None # We have already visited this node, no need to check it again
+    history.append(current_node)
+    if current_node == end_position:
+        return history
+    neighbors = get_neighbors(current_node)
+    if neighbors is None or len(neighbors) == 0:
+        history.pop() # This node has no neighbors, so cannot be the goal, so remove it
+        return None
+    for neighbor in neighbors:
+        potential_path = search(neighbor, history)
+        if potential_path is not None and len(potential_path) > 0:
+            return potential_path
+    history.pop() # This node is not the goal, and none of its neighbors are, so remove this node
+    return None
 
 def import_maze(file_name):
-    print('Importing maze.')
     maze_file = open(file_name)
     for row in range(MAZE_HEIGHT):
         for col in range(MAZE_WIDTH+1): # We use MAZE_WIDTH+1 because the new line character
@@ -44,7 +44,6 @@ def import_maze(file_name):
             if col == MAZE_WIDTH:
                 break # Throw away the last character of the line (either a newline or an EOF)
             maze[row][col] = char_read
-    print('Finished importing maze.')
 
 def print_maze():
     for row in range(MAZE_HEIGHT):
@@ -52,9 +51,9 @@ def print_maze():
             print(maze[row][col], end='')
         print()
 
-def mark_position(coord):
-    if maze[coord[0]][coord[1]] != WALL and maze[coord[0]][coord[1]] != "*":
-        maze[coord[0]][coord[1]] = "*"
+def mark_position(coord, char):
+    if maze[coord[0]][coord[1]] != WALL:
+        maze[coord[0]][coord[1]] = char
     else:
         print("Oops, you walked into a wall!")
 
@@ -65,19 +64,21 @@ def get_neighbors(coord):
     row = coord[0]
     col = coord[1]
     neighbors = []
-    if col != 0 and maze[row][col - 1] != WALL and maze[row][col - 1] != "*":
+    if col != 0 and maze[row][col - 1] != WALL:
         neighbors.append((row, col - 1))
-    if col != MAZE_WIDTH-1 and maze[row][col + 1] != WALL and maze[row][col + 1] != "*":
-        neighbors.append((row, col + 1))
-    if row != 0 and maze[row - 1][col] != WALL and maze[row - 1][col] != "*":
+    if row != 0 and maze[row - 1][col] != WALL:
         neighbors.append((row - 1, col))
-    if row != MAZE_HEIGHT-1 and maze[row + 1][col] != WALL and maze[row + 1][col] != "*":
+    if col != MAZE_WIDTH-1 and maze[row][col + 1] != WALL:
+        neighbors.append((row, col + 1))
+    if row != MAZE_HEIGHT-1 and maze[row + 1][col] != WALL:
         neighbors.append((row + 1, col))
     return neighbors
 
 if __name__ == '__main__':
-    print('Beginning uninformed search.')
     import_maze('maze.txt')
-    mark_position(start_position)
-    uninformed_search()
-    print('Finished uninformed search.')
+    path = search(start_position, [])
+    if path is None or len(path) == 0:
+        print("No solution found")
+    for index, pos in enumerate(path):
+        mark_position(pos, '*')
+    print_maze()
