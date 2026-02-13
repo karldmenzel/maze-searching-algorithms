@@ -1,5 +1,4 @@
 import math
-import time
 
 MAZE_WIDTH = 37
 MAZE_HEIGHT = 25
@@ -57,9 +56,6 @@ def mark_position(coord, char):
     else:
         print("Oops, you walked into a wall!")
 
-def straight_line_distance(coord1, coord2):
-    return math.sqrt((coord2[0] - coord1[0]) ** 2 + (coord2[1] - coord1[1]) ** 2)
-
 def get_neighbors(coord):
     row = coord[0]
     col = coord[1]
@@ -79,6 +75,8 @@ if __name__ == '__main__':
     path = search(start_position, [])
     if path is None or len(path) == 0:
         print("No solution found")
+        exit(1)
+
     for index, pos in enumerate(path):
         mark_position(pos, '*')
     print_maze()
