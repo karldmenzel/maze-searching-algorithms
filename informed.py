@@ -29,29 +29,53 @@ class Node:
 open_list = []
 closed_list = []
 
+def compare(x):
+    return x.f
+
 def search():
     while len(open_list) > 0:
+        # Sort the open list so that we get the lowest f value
+        open_list.sort(key=compare)
         current_node = open_list.pop(0)
-        print(current_node)
-        neighbors = get_neighbors(current_node.coords)
-        for neighbor in neighbors:
-            if neighbor == end_position:
-                print("Found it!")
-                # TODO figure out how to end
-                return
-            else:
-                g = current_node.g + 1
-                h = straight_line_distance(neighbor, end_position)
-                f = g + h
-                neighbor_node = Node(neighbor, current_node, f, g, h)
-                if better_route_open(neighbor_node):
-                    continue
-                if better_route_closed(neighbor_node):
-                    continue
-                open_list.append(neighbor_node)
-        #         TODO sort the open_list
+
+        # Are we at the end? If so great
+        if current_node.coords == end_position:
+            print("Found it!")
+            return current_node
+
+        # We are expanding the current node, so we don't need to search it again
         closed_list.append(current_node)
+
+        neighbors_coords = get_neighbors(current_node.coords)
+        for neighbor_coords in neighbors_coords:
+            if is_in_closed_list(neighbor_coords):
+                continue
+
+            g = current_node.g + 1
+            h = manhattan_distance(neighbor_coords, end_position)
+            f = g + h
+            neighbor_node = Node(neighbor_coords, current_node.coords, f, g, h)
+
+            list_spot = is_in_open_list(neighbor_coords)
+            if list_spot == -1:
+                open_list.append(neighbor_node)
+            else:
+                open_list[list_spot] = neighbor_node
+    if len(open_list) > 0:
+        print("No solution found")
     return
+
+def is_in_closed_list(x):
+    for closed_node in closed_list:
+        if x == closed_node.coords:
+            return True
+    return False
+
+def is_in_open_list(x):
+    for index, open_node in enumerate(open_list):
+        if x == open_node.coords:
+            return index
+    return -1
 
 def better_route_open(new_node):
     for old_node in open_list:
@@ -86,8 +110,8 @@ def mark_position(coord, char):
     else:
         print("Oops, you walked into a wall!")
 
-def straight_line_distance(coord1, coord2):
-    return math.sqrt((coord2[0] - coord1[0]) ** 2 + (coord2[1] - coord1[1]) ** 2)
+def manhattan_distance(coord1, coord2):
+    return abs(coord1[0] - coord2[0]) + abs(coord1[1] - coord2[1])
 
 def get_neighbors(coord):
     row = coord[0]
@@ -103,11 +127,31 @@ def get_neighbors(coord):
         neighbors.append((row + 1, col))
     return neighbors
 
+def find_node(search_coord):
+    for x in closed_list:
+        if x.coords == search_coord:
+            return x
+    return None
+
 if __name__ == '__main__':
     import_maze('maze.txt')
 
-    start_node_h = straight_line_distance(start_position, end_position)
-    start_node = Node(start_position, None, start_node_h, 0, start_node_h) # TODO should f be 0?
+    start_node_h = manhattan_distance(start_position, end_position)
+    start_node = Node(start_position, None, start_node_h, 0, start_node_h)
     open_list.append(start_node)
 
-    # search()
+    last_node = search()
+
+    path = []
+    i = last_node
+    while i.parent is not None:
+        path.append(i)
+        parent_node = find_node(i.parent)
+        i = parent_node
+
+    path.append(start_node)
+
+    for node in path:
+        mark_position(node.coords, '*')
+
+    print_maze()
