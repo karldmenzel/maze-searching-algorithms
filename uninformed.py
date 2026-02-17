@@ -1,14 +1,7 @@
-import math
 
 MAZE_WIDTH = 37
 MAZE_HEIGHT = 25
 WALL = "O"
-
-start_position = (24, 35)
-end_position = (0, 2)
-
-maze = [[1] * MAZE_WIDTH for _ in range(MAZE_HEIGHT)]
-
 
 # coordinates: [row][col]
 # [0][0]    [0][1]  [0][2] ... [0, 36]
@@ -17,8 +10,16 @@ maze = [[1] * MAZE_WIDTH for _ in range(MAZE_HEIGHT)]
 # ...
 # [24][0]
 
+# The start and end are two spaces wide.
+# Here we assume that we are starting and ending at the furthest out spaces.
+start_position = (24, 35)
+end_position = (0, 1)
 
-def search(current_node, history):
+maze = [[1] * MAZE_WIDTH for _ in range(MAZE_HEIGHT)]
+
+# Depth first search is NOT OPTIMAL and is heavily dependent on the order in which nodes are expanded.
+# As a result, the paths have strange blocks, where the search made a "snake" pattern.
+def depth_first_search(current_node, history):
     if current_node in history:
         return None # We have already visited this node, no need to check it again
     history.append(current_node)
@@ -29,7 +30,7 @@ def search(current_node, history):
         history.pop() # This node has no neighbors, so cannot be the goal, so remove it
         return None
     for neighbor in neighbors:
-        potential_path = search(neighbor, history)
+        potential_path = depth_first_search(neighbor, history)
         if potential_path is not None and len(potential_path) > 0:
             return potential_path
     history.pop() # This node is not the goal, and none of its neighbors are, so remove this node
@@ -70,13 +71,19 @@ def get_neighbors(coord):
         neighbors.append((row + 1, col))
     return neighbors
 
-if __name__ == '__main__':
-    import_maze('maze.txt')
-    path = search(start_position, [])
-    if path is None or len(path) == 0:
+def format_result(result_path):
+    if result_path is None or len(result_path) == 0:
         print("No solution found")
         exit(1)
 
-    for index, pos in enumerate(path):
+    for index, pos in enumerate(result_path):
         mark_position(pos, '*')
+
+if __name__ == '__main__':
+    import_maze('maze.txt')
+
+    path = depth_first_search(start_position, [])
+
+    format_result(path)
+
     print_maze()
